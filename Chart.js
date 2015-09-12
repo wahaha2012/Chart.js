@@ -2959,7 +2959,7 @@
 				pointHitDetectionRadius = Math.floor(canvasWidth / labels.length / 2) - this.options.pointDotRadius;
 			}
 			
-			console.log(pointHitDetectionRadius);
+			// console.log(pointHitDetectionRadius);
 			return pointHitDetectionRadius;
 		},
 		update : function(){
