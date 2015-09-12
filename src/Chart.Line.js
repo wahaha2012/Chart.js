@@ -46,6 +46,9 @@
 		//Number - amount extra to add to the radius to cater for hit detection outside the drawn point
 		pointHitDetectionRadius : 20,
 
+		// Boolean - calculate pointHitDetectionRadius value automatically
+		pointAutoHitDetectionRadius: false,
+
 		//Boolean - Whether to show a stroke for datasets
 		datasetStroke : true,
 
@@ -74,7 +77,7 @@
 				strokeWidth : this.options.pointDotStrokeWidth,
 				radius : this.options.pointDotRadius,
 				display: this.options.pointDot,
-				hitDetectionRadius : this.options.pointHitDetectionRadius,
+				hitDetectionRadius : this.getHitDetectionRadius(data.labels),
 				ctx : this.chart.ctx,
 				inRange : function(mouseX){
 					return (Math.pow(mouseX-this.x, 2) < Math.pow(this.radius + this.hitDetectionRadius,2));
@@ -141,6 +144,17 @@
 
 
 			this.render();
+		},
+		getHitDetectionRadius: function(labels){
+			var pointHitDetectionRadius = this.options.pointHitDetectionRadius;
+
+			if (this.options.pointAutoHitDetectionRadius) {
+				var canvasWidth = helpers.getMaximumWidth(this.chart.canvas);
+				pointHitDetectionRadius = Math.floor(canvasWidth / labels.length / 2) - this.options.pointDotRadius;
+			}
+			
+			// console.log(pointHitDetectionRadius);
+			return pointHitDetectionRadius;
 		},
 		update : function(){
 			this.scale.update();
@@ -224,7 +238,8 @@
 					steps: this.options.scaleSteps,
 					stepValue: this.options.scaleStepWidth,
 					min: this.options.scaleStartValue,
-					max: this.options.scaleStartValue + (this.options.scaleSteps * this.options.scaleStepWidth)
+					max: this.options.scaleStartValue + (this.options.scaleSteps * this.options.scaleStepWidth),
+					stepsX: this.options.scaleStepsX ? this.options.scaleStepsX + 1 : this.options.scaleStepsX
 				});
 			}
 

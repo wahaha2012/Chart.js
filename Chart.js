@@ -77,6 +77,8 @@
 			scaleStepWidth: null,
 			// Number - The scale starting value
 			scaleStartValue: null,
+			// Number - The number of steps x in a hard coded scale
+			scaleStepsX: null,
 
 			// String - Colour of the scale line
 			scaleLineColor: "rgba(0,0,0,.1)",
@@ -487,8 +489,8 @@
 			// If templateString is function rather than string-template - call the function for valuesObject
 
 			if(templateString instanceof Function){
-			 	return templateString(valuesObject);
-		 	}
+				return templateString(valuesObject);
+			}
 
 			var cache = {};
 			function tmpl(str, data){
@@ -830,13 +832,13 @@
 		},
 		getMaximumWidth = helpers.getMaximumWidth = function(domNode){
 			var container = domNode.parentNode,
-			    padding = parseInt(getStyle(container, 'padding-left')) + parseInt(getStyle(container, 'padding-right'));
+				padding = parseInt(getStyle(container, 'padding-left')) + parseInt(getStyle(container, 'padding-right'));
 			// TODO = check cross browser stuff with this.
 			return container.clientWidth - padding;
 		},
 		getMaximumHeight = helpers.getMaximumHeight = function(domNode){
 			var container = domNode.parentNode,
-			    padding = parseInt(getStyle(container, 'padding-bottom')) + parseInt(getStyle(container, 'padding-top'));
+				padding = parseInt(getStyle(container, 'padding-bottom')) + parseInt(getStyle(container, 'padding-top'));
 			// TODO = check cross browser stuff with this.
 			return container.clientHeight - padding;
 		},
@@ -1647,7 +1649,7 @@
 					firstRotatedWidth;
 				this.xLabelWidth = originalLabelWidth;
 				//Allow 3 pixels x2 padding either side for label readability
-				var xGridWidth = Math.floor(this.calculateX(1) - this.calculateX(0)) - 6;
+				var xGridWidth = Math.floor(this.calculateX(1, true) - this.calculateX(0, true)) - 6;
 
 				//Max label rotate should be 90 - also act as a loop counter
 				while ((this.xLabelWidth > xGridWidth && this.xLabelRotation === 0) || (this.xLabelWidth > xGridWidth && this.xLabelRotation <= 90 && this.xLabelRotation > 0)){
@@ -1688,8 +1690,9 @@
 			var scalingFactor = this.drawingArea() / (this.min - this.max);
 			return this.endPoint - (scalingFactor * (value - this.min));
 		},
-		calculateX : function(index){
+		calculateX : function(index, isLabel){
 			var isRotated = (this.xLabelRotation > 0),
+				valuesCount = isLabel ? (this.stepsX || this.valuesCount) : this.valuesCount,
 				// innerWidth = (this.offsetGridLines) ? this.width - offsetLeft - this.padding : this.width - (offsetLeft + halfLabelWidth * 2) - this.padding,
 				innerWidth = this.width - (this.xScalePaddingLeft + this.xScalePaddingRight),
 				valueWidth = innerWidth/Math.max((this.valuesCount - ((this.offsetGridLines) ? 0 : 1)), 1),
@@ -1783,8 +1786,16 @@
 					ctx.closePath();
 
 				},this);
-
+				
+				var xLabelStep = 0;
+				if (this.stepsX) {
+					xLabelStep = Math.floor(this.xLabels.length / this.stepsX);
+				}
 				each(this.xLabels,function(label,index){
+					if (this.stepsX && index % xLabelStep !== 0) {
+						return;
+					}
+					
 					var xPos = this.calculateX(index) + aliasPixel(this.lineWidth),
 						// Check to see if line/bar here and decide where to place the line
 						linePos = this.calculateX(index - (this.offsetGridLines ? 0.5 : 0)) + aliasPixel(this.lineWidth),
@@ -2841,6 +2852,9 @@
 		//Number - amount extra to add to the radius to cater for hit detection outside the drawn point
 		pointHitDetectionRadius : 20,
 
+		// Boolean - calculate pointHitDetectionRadius value automatically
+		pointAutoHitDetectionRadius: false,
+
 		//Boolean - Whether to show a stroke for datasets
 		datasetStroke : true,
 
@@ -2869,7 +2883,7 @@
 				strokeWidth : this.options.pointDotStrokeWidth,
 				radius : this.options.pointDotRadius,
 				display: this.options.pointDot,
-				hitDetectionRadius : this.options.pointHitDetectionRadius,
+				hitDetectionRadius : this.getHitDetectionRadius(data.labels),
 				ctx : this.chart.ctx,
 				inRange : function(mouseX){
 					return (Math.pow(mouseX-this.x, 2) < Math.pow(this.radius + this.hitDetectionRadius,2));
@@ -2936,6 +2950,17 @@
 
 
 			this.render();
+		},
+		getHitDetectionRadius: function(labels){
+			var pointHitDetectionRadius = this.options.pointHitDetectionRadius;
+
+			if (this.options.pointAutoHitDetectionRadius) {
+				var canvasWidth = helpers.getMaximumWidth(this.chart.canvas);
+				pointHitDetectionRadius = Math.floor(canvasWidth / labels.length / 2) - this.options.pointDotRadius;
+			}
+			
+			console.log(pointHitDetectionRadius);
+			return pointHitDetectionRadius;
 		},
 		update : function(){
 			this.scale.update();
@@ -3019,7 +3044,8 @@
 					steps: this.options.scaleSteps,
 					stepValue: this.options.scaleStepWidth,
 					min: this.options.scaleStartValue,
-					max: this.options.scaleStartValue + (this.options.scaleSteps * this.options.scaleStepWidth)
+					max: this.options.scaleStartValue + (this.options.scaleSteps * this.options.scaleStepWidth),
+					stepsX: this.options.scaleStepsX ? this.options.scaleStepsX + 1 : this.options.scaleStepsX
 				});
 			}
 
