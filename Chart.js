@@ -2850,10 +2850,10 @@
 		pointDotStrokeWidth : 1,
 
 		//Number - amount extra to add to the radius to cater for hit detection outside the drawn point
-		pointHitDetectionRadius : 20,
+		pointHitDetectionRadius : 0,
 
 		// Boolean - calculate pointHitDetectionRadius value automatically
-		pointAutoHitDetectionRadius: false,
+		pointAutoHitDetectionRadius: true,
 
 		//Boolean - Whether to show a stroke for datasets
 		datasetStroke : true,
